@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apache File Share - Windows 2000</title>
+<style>
+@font-face{font-family:'MS Sans';src:local('Tahoma'),local('MS Sans Serif'),local('Segoe UI')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:#000;
+  font-family:"MS Sans Serif","Microsoft Sans Serif",Tahoma,Arial,sans-serif;
+  font-size:11px;
+  color:#000;
+  overflow:hidden;
+  user-select:none;
+}
+#matrix{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:0; background:#000;
+}
+.hacked-splash{
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:1; pointer-events:none;
+  text-align:center;
+}
+
+.hacked-splash .skull{
+  font-family:'Courier New',monospace;
+  font-size:9px; line-height:1.0;
+  color:#00ff41; text-shadow:0 0 8px #00ff41,0 0 18px #00ff41,0 0 30px #008f11;
+  white-space:pre; text-align:center;
+  opacity:0.18; filter:blur(0.3px);
+  animation: skullPulse 3.2s ease-in-out infinite;
+}
+@keyframes skullPulse{ 0%,100%{opacity:0.14; transform:scale(1)} 50%{opacity:0.28; transform:scale(1.015)} }
+.hacked-splash .nameSplash{
+  margin-top:18px;
+  font-family:'Courier New',monospace;
+  font-size:42px; font-weight:900; letter-spacing:6px;
+  color:transparent;
+  -webkit-text-stroke:1.5px #00ff41;
+  text-shadow:0 0 12px rgba(0,255,65,0.9),0 0 28px rgba(0,255,65,0.6),0 0 50px rgba(0,255,65,0.3);
+  position:relative;
+}
+.hacked-splash .nameSplash::before{
+  content:"ilyas.sbihan";
+  position:absolute; left:0; top:0;
+  color:#00ff41; -webkit-text-stroke:0;
+  clip-path:polygon(0 0,100% 0,100% 45%,0 45%);
+  transform:translate(-1px,0);
+  opacity:0.95; filter:blur(0.4px);
+}
+.hacked-splash .nameSplash::after{
+  content:"ilyas.sbihan";
+  position:absolute; left:0; top:0;
+  color:#ff0040; -webkit-text-stroke:0;
+  clip-path:polygon(0 55%,100% 55%,100% 100%,0 100%);
+  transform:translate(1px,0);
+  opacity:0.45; mix-blend-mode:screen;
+}
+.hacked-splash .sub{
+  margin-top:8px;
+  font-family:'Courier New',monospace;
+  font-size:11px; letter-spacing:8px; text-transform:uppercase;
+  color:#00ff41; opacity:0.85;
+  text-shadow:0 0 6px #00ff41;
+  animation: flicker 0.18s infinite alternate;
+}
+@keyframes flicker{ 0%{opacity:0.85} 100%{opacity:1} }
+.hacked-splash .scan{
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,255,65,0.04) 3px, rgba(0,255,65,0.04) 4px);
+  pointer-events:none;
+}
+/* Desktop icons */
+.desktop{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:18px;z-index:3}
+.dicon{width:74px;text-align:center;color:white;text-shadow:1px 1px 0 #000;font-size:11px;line-height:1.2;cursor:pointer}
+.dicon .box{width:48px;height:48px;margin:0 auto 4px;background:#c0c0c0;border:2px outset #fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:1px 1px 0 #000}
+.dicon:active .box{border:2px inset #fff}
+.dicon span{background:transparent;padding:1px 2px}
+.dicon.selected span{background:#000080;color:white}
+
+/* Window */
+.window{ z-index:5;
+  position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);
+  width:min(980px,96vw);height:min(640px,84vh);
+  background:#c0c0c0;
+  border:2px outset #fff;
+  box-shadow:2px 2px 0 rgba(0,0,0,.5);
+  display:flex;flex-direction:column;
+  image-rendering:pixelated;
+}
+.titlebar{
+  height:22px;background:#000080;color:white;display:flex;align-items:center;justify-content:space-between;
+  padding:2px 3px;font-weight:bold;font-size:11px;letter-spacing:.2px;flex-shrink:0;
+}
+.titlebar .left{display:flex;align-items:center;gap:6px}
+.titlebar .icon{width:16px;height:16px;background:#c0c0c0;border:1px outset #fff;display:flex;align-items:center;justify-content:center;color:#000;font-size:10px}
+.titlebar .right{display:flex;gap:2px}
+.tbtn{width:16px;height:14px;background:#c0c0c0;color:#000;border:1px outset #fff;font-size:9px;font-weight:bold;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+.tbtn:active{border:1px inset #fff}
+.tbtn.close{font-size:10px}
+.menubar{height:20px;background:#c0c0c0;border-bottom:1px solid #808080;display:flex;align-items:center;gap:2px;padding:0 4px;flex-shrink:0}
+.menubar span{padding:2px 6px}
+.menubar span:hover{background:#000080;color:white}
+.menubar span u{text-decoration:none;border-bottom:1px solid}
+.toolbar{height:38px;background:#c0c0c0;border-bottom:2px outset #fff;display:flex;align-items:center;gap:4px;padding:4px 6px;flex-shrink:0}
+.toolbtn{height:26px;background:#c0c0c0;border:1px outset #fff;padding:0 8px;display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer}
+.toolbtn:active{border:1px inset #fff}
+.toolbtn .ico{font-size:14px}
+.divider{width:1px;height:22px;background:#808080;border-right:1px solid #fff;margin:0 4px}
+.addrbar{flex:1;height:22px;background:white;border:2px inset #fff;display:flex;align-items:center;gap:6px;padding:0 4px;font-size:11px;overflow:hidden}
+.addrbar .label{color:#000;white-space:nowrap}
+.addrbar .path{flex:1;background:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statusbar{height:18px;background:#c0c0c0;border-top:1px solid #fff;display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-size:11px;flex-shrink:0}
+.statusbar .cell{border:1px inset #fff;padding:1px 6px;background:#c0c0c0;flex:1}
+.statusbar .cell.right{max-width:180px;text-align:right;flex:0 0 180px;margin-left:4px}
+/* Content */
+.content{flex:1;background:white;border:2px inset #fff;margin:4px 4px 0 4px;display:flex;flex-direction:column;overflow:hidden}
+.how{
+  background:#ffffe1;border:1px solid #000;padding:6px 8px;margin:6px;font-size:11px;line-height:1.4;display:flex;gap:8px;align-items:flex-start
+}
+.how .yicon{font-size:18px;flex-shrink:0}
+.how code{background:#fff;border:1px solid #808080;padding:0 3px;font-size:10px}
+.listhead{height:18px;background:#c0c0c0;border-bottom:1px solid #808080;display:flex;font-size:11px;flex-shrink:0}
+.col{border-right:1px solid #808080;padding:2px 6px;display:flex;align-items:center;overflow:hidden;white-space:nowrap}
+.col:last-child{border-right:none}
+.col.name{flex:1.6}
+.col.size{flex:0.6;justify-content:flex-end}
+.col.type{flex:0.9}
+.col.mod{flex:0.9}
+.col.dl{flex:0.5;justify-content:center}
+.list{flex:1;overflow:auto;background:white}
+.row{height:18px;display:flex;align-items:center;font-size:11px;cursor:pointer}
+.row:hover{background:#000080;color:white}
+.row.selected{background:#000080;color:white}
+.row .col{border-right:1px solid #c0c0c0;height:100%}
+.row .col:last-child{border-right:none}
+.row a{color:inherit;text-decoration:none}
+.row:hover a{color:white}
+.dlbtn{
+  background:#c0c0c0;color:#000;border:1px outset #fff;padding:1px 8px;font-size:11px;text-decoration:none;display:inline-block;line-height:14px
+}
+.dlbtn:active{border:1px inset #fff}
+.row:hover .dlbtn{color:#000}
+.empty{padding:40px;text-align:center;color:#808080;background:white}
+.empty .big{font-size:32px;margin-bottom:8px}
+/* Taskbar */
+.taskbar{
+  position:absolute;bottom:0;left:0;right:0;height:30px;background:#c0c0c0;border-top:2px outset #fff;
+  display:flex;align-items:center;gap:4px;padding:2px 4px;z-index:10
+}
+.start{
+  height:22px;background:#c0c0c0;border:2px outset #fff;padding:0 8px 0 4px;display:flex;align-items:center;gap:4px;font-weight:bold;font-size:11px;cursor:pointer;box-shadow:1px 1px 0 rgba(0,0,0,.2)
+}
+.start:active{border:2px inset #fff}
+.start .winlogo{width:16px;height:16px;background:#000080;color:white;display:flex;align-items:center;justify-content:center;font-size:10px}
+.taskitem{flex:1;max-width:200px;height:22px;background:#e0e0e0;border:2px inset #fff;display:flex;align-items:center;gap:6px;padding:0 6px;font-size:11px;overflow:hidden}
+.taskitem.active{background:#d4d0c8;border:2px inset #fff;font-weight:bold}
+.tray{height:22px;background:#c0c0c0;border:2px inset #fff;display:flex;align-items:center;gap:6px;padding:0 6px;font-size:11px;margin-left:auto}
+.tray .clock{white-space:nowrap}
+.blink{animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+@media(max-width:700px){
+  .window{ z-index:5;width:98vw;height:88vh;transform:translate(-50%,-45%)}
+  .desktop{display:none}
+  .col.type{display:none}
+  .how{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="hacked-splash" aria-hidden="true">
+  <pre class="skull">      .-""-.
+     /  o o  \
+    |   ◉ ◉   |   .-""-.
+    |    ▿    |  /  ◉ ◉ \
+     \  --  /   |   ▿   |
+      '--'      \  --  /
+      DEDSEC      '--'
+  </pre>
+  <div class="nameSplash">ilyas.sbihan</div>
+  <div class="sub">SYSTEM BREACHED &nbsp;•&nbsp; ROOT ACCESS GRANTED &nbsp;•&nbsp; DEDSEC</div>
+  <div class="scan"></div>
+</div>
+
+<!-- Desktop - Socials -->
+<div class="desktop">
+  <div class="dicon" data-url="https://github.com/ilyas.sbihan" title="GitHub - ilyas.sbihan"><div class="box">🐙</div><span>GitHub</span></div>
+  <div class="dicon" data-url="https://instagram.com/ilyas.sbihan" title="Instagram"><div class="box">📷</div><span>Instagram</span></div>
+  <div class="dicon" data-url="https://www.tiktok.com/@ilyas.sbihan" title="TikTok"><div class="box">🎵</div><span>TikTok</span></div>
+  <div class="dicon" data-url="https://reddit.com/user/ilyas_sbihan" title="Reddit"><div class="box">👽</div><span>Reddit</span></div>
+  <div class="dicon" data-url="https://discord.com" title="Discord"><div class="box">💬</div><span>Discord</span></div>
+  <div class="dicon" data-url="https://wa.me/" title="WhatsApp"><div class="box">💚</div><span>WhatsApp</span></div>
+</div>
+
+<!-- Main Window -->
+<div class="window" id="win">
+  <div class="titlebar" id="title">
+    <div class="left"><div class="icon">📁</div> Apache File Share - [C:\Apache\files] - Windows 2000 Professional</div>
+    <div class="right"><div class="tbtn">_</div><div class="tbtn">□</div><div class="tbtn close">X</div></div>
+  </div>
+  <div class="menubar"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>V</u>iew</span><span><u>F</u>avorites</span><span><u>T</u>ools</span><span><u>H</u>elp</span></div>
+  <div class="toolbar">
+    <div class="toolbtn"><span class="ico">←</span> Back</div>
+    <div class="toolbtn"><span class="ico">→</span> Forward</div>
+    <div class="toolbtn"><span class="ico">⬆</span> Up</div>
+    <div class="divider"></div>
+    <div class="toolbtn">✂ Cut</div>
+    <div class="toolbtn">⎘ Copy</div>
+    <div class="toolbtn">⎗ Paste</div>
+    <div class="toolbtn">↩ Undo</div>
+    <div class="divider"></div>
+    <div class="addrbar"><span class="label">Address</span><span style="border-left:1px solid #808080;height:14px"></span><span class="path">C:\Apache\files\ &nbsp; (&nbsp;5 object(s) &nbsp;•&nbsp; 3.68 GB&nbsp;)</span></div>
+  </div>
+
+  <div class="content">
+        <div class="how" style="background:#0a0a0a;border:2px inset #808080;padding:0;justify-content:center;overflow:hidden;position:relative">
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.03) 2px, rgba(0,255,0,0.03) 4px);pointer-events:none;z-index:2"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.15) 50%);background-size:100% 4px;pointer-events:none;z-index:2;opacity:0.6"></div>
+      <pre id="liveAscii" style="margin:0;padding:10px 8px;font-family:'Courier New',Courier,monospace;font-size:7.2px;line-height:1.05;color:#00ff41;text-shadow:0 0 6px #00ff41,0 0 12px #008f11;white-space:pre;text-align:center;letter-spacing:0.6px;overflow:hidden;max-width:100%;position:relative;z-index:1;filter:contrast(1.1)"></pre>
+      <div id="glitchOverlay" style="position:absolute;inset:0;pointer-events:none;z-index:3;opacity:0"></div>
+    </div>
+    <style>
+    @keyframes dedsecFlicker {
+      0%,100% { opacity:1; }
+      2% { opacity:0.8; }
+      4% { opacity:1; }
+      7% { opacity:0.9; }
+    }
+    @keyframes rgbShift {
+      0% { text-shadow:0 0 6px #00ff41,0 0 12px #008f11; transform:translate(0); }
+      20% { text-shadow:-1px 0 #ff0040, 1px 0 #00ffff, 0 0 6px #00ff41; transform:translate(-0.5px,0); }
+      40% { text-shadow:1px 0 #ff0040, -1px 0 #00ffff, 0 0 6px #00ff41; transform:translate(0.5px,0); }
+      60% { text-shadow:0 0 6px #00ff41,0 0 12px #008f11; transform:translate(0); }
+    }
+    .glitch-active { animation: rgbShift 0.22s linear; }
+    .scanline { position:relative; }
+    .scanline::after {
+      content:""; position:absolute; left:0; right:0; top:0; height:2px;
+      background:rgba(0,255,65,0.7); box-shadow:0 0 8px #00ff41;
+      animation: scanMove 2.4s linear infinite; pointer-events:none;
+    }
+    @keyframes scanMove { 0%{ top:-2px; opacity:0 } 10%{opacity:1} 90%{opacity:1} 100%{ top:100%; opacity:0 } }
+    </style>
+    <script>
+    (function(){
+      const target=` ___ _ __   ___ _  ___   ___ ___ ___ _  _ _ _  _  _ 
+|_ _| |\\ \\ / / | |/ __| / __| _ )_ _| || | | || \\| |
+ | || |_\\ V /|_  _\\__ \\_\\__ \\ _ \\| || __ |_  _| .\` |
+|___|____|_|   |_||___(_)___/___/___|_||_| |_||_|\\_|
+
+  ___           _                 
+ / __| _  _ ___| |_ ___ _ __  ___
+ \\__ \\| || (_-<  _/ -_) '  \\(_-<
+ |___/\\_, /__/\\__\\___|_|_|_|/__/
+      |__/                       
+         ILY4S.SBIH4N Systems`;
+      const el=document.getElementById('liveAscii');
+      const overlay=document.getElementById('glitchOverlay');
+      const chars="!@#$%^&*()_+-=[]{}|;:,.<>?/0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz█▓▒░/\\_.-";
+      const dedsecChars="DEDSEC";
+      let frame=0, loopId, glitchTimeout;
+      const lines = target.split("\n");
+      const cols = Math.max(...lines.map(l=>l.length));
+
+      function renderWithGlitch(progress, intensity){
+        let out=""; let len=target.length;
+        for(let i=0;i<len;i++){
+          const ch=target[i];
+          if(ch==="\n"){ out+="\n"; continue; }
+          if(ch===" "){ // keep spaces but occasionally glitch spaces to █
+            out+= (intensity>0.7 && Math.random()<0.04) ? "█" : " ";
+            continue;
+          }
+          const col = i % (cols+1);
+          const row = Math.floor(i/(cols+1));
+          // DedSec wave: horizontal slices glitch
+          const sliceGlitch = (Math.floor(row/1) % 3 === 0 && intensity>0.5 && Math.random()<0.22) ? (Math.random()<0.5?-1:1) : 0;
+          const wave = Math.sin((col*0.11)+(frame*0.18)) + Math.cos((row*0.55)+(frame*0.14));
+          const reveal = progress*0.9 + (wave+2)*0.04 + (intensity*0.18);
+          const charPos = i/len;
+          if(charPos < reveal) {
+            // revealed char, but with occasional DedSec red flicker char
+            if(intensity>0.6 && Math.random()<0.06*intensity) {
+              out+= dedsecChars[Math.floor(Math.random()*dedsecChars.length)];
+            } else {
+              // slight horizontal shift visual via extra space
+              if(sliceGlitch!==0 && Math.random()<0.5) out+=" ";
+              out+=ch;
+            }
+          } else {
+            // shaping: random green matrix char
+            let rc = chars[Math.floor(Math.random()*chars.length)];
+            // DedSec style: more █▓ when intensity high
+            if(intensity>0.5 && Math.random()<0.18) rc="█";
+            out+=rc;
+          }
+        }
+        el.textContent=out;
+        // RGB shift class
+        if(intensity>0.55) {
+          el.classList.add("glitch-active");
+          overlay.style.opacity = (intensity*0.18).toString();
+          overlay.style.background = intensity>0.8 ? "repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(255,0,64,0.07) 2px, transparent 4px)" : "";
+        } else {
+          el.classList.remove("glitch-active");
+          overlay.style.opacity="0";
+        }
+      }
+
+      let progress=0, direction=1, intensity=0;
+      let phase="build"; // build -> hold -> glitch -> rebuild loop
+
+      function loop(){
+        if(phase==="build"){
+          progress+=0.045;
+          frame+=1.1;
+          intensity = 0.15 + Math.sin(frame*0.08)*0.1;
+          renderWithGlitch(progress, intensity);
+          if(progress>=1.08){ phase="hold"; progress=1.08; setTimeout(()=>{phase="glitch";}, 900); }
+        } else if(phase==="hold"){
+          frame+=0.6;
+          // subtle live flicker even when held
+          intensity = 0.12 + Math.sin(frame*0.11)*0.07 + Math.random()*0.05;
+          renderWithGlitch(1.08, intensity);
+        } else if(phase==="glitch"){
+          // DedSec burst: 0.8s of heavy glitching
+          intensity = 0.85 + Math.random()*0.4;
+          progress = 0.92 + Math.random()*0.12;
+          frame+=2.2;
+          renderWithGlitch(progress, intensity);
+          // occasional slice tear
+          if(Math.random()<0.35) el.style.transform="translate("+(Math.random()<0.5?"-1px":"1px")+",0)";
+          else el.style.transform="translate(0,0)";
+          glitchTimeout = setTimeout(()=>{
+            el.style.transform="translate(0,0)";
+            phase="rebuild";
+            progress=0.72;
+          }, 420+Math.random()*380);
+          // after this burst, go rebuild
+          // prevent loop() from running until timeout
+          return;
+        } else if(phase==="rebuild"){
+          progress+=0.07;
+          frame+=1.4;
+          intensity = 0.55 + Math.random()*0.25;
+          renderWithGlitch(progress, intensity);
+          if(progress>=1.08){ phase="hold"; setTimeout(()=>{ if(Math.random()<0.85) phase="glitch"; }, 1400+Math.random()*1800); }
+        }
+      }
+
+      // main loop 24fps DedSec style
+      setInterval(loop, 42);
+      // click to force DedSec glitch
+      el.style.cursor="pointer"; el.title="Click for DEDSEC glitch";
+      el.addEventListener("click", ()=>{ phase="glitch"; });
+      // also glitch on window drag
+      const win=document.getElementById("win");
+      if(win) win.addEventListener("mousemove", ()=>{ if(Math.random()<0.025) phase="glitch"; });
+      // init
+      renderWithGlitch(0,0.3);
+    })();
+    </script>
+
+    <div class="listhead">
+      <div class="col name">Name ▲</div>
+      <div class="col size">Size</div>
+      <div class="col type">Type</div>
+      <div class="col mod">Modified</div>
+      <div class="col dl"></div>
+    </div>
+    <div class="list">
+      <div class="row selected">
+        <div class="col name"><span style="margin-right:6px">💿</span><a href="files/tiny10%2023h1%20x64.iso" download>tiny10 23h1 x64.iso</a></div>
+        <div class="col size">3.67 GB</div>
+        <div class="col type">CD Image</div>
+        <div class="col mod">09/10/2026 12:56 AM</div>
+        <div class="col dl"><a class="dlbtn" href="files/tiny10%2023h1%20x64.iso" download>Download</a></div>
+      </div>
+      <div class="row ">
+        <div class="col name"><span style="margin-right:6px">📄</span><a href="files/hello.pdf" download>hello.pdf</a></div>
+        <div class="col size">10 B</div>
+        <div class="col type">PDF Document</div>
+        <div class="col mod">09/10/2026 12:56 AM</div>
+        <div class="col dl"><a class="dlbtn" href="files/hello.pdf" download>Download</a></div>
+      </div>
+      <div class="row ">
+        <div class="col name"><span style="margin-right:6px">📦</span><a href="files/lutris_0.5.22_all.deb" download>lutris_0.5.22_all.deb</a></div>
+        <div class="col size">1.97 MB</div>
+        <div class="col type">Debian Package</div>
+        <div class="col mod">09/10/2026 12:56 AM</div>
+        <div class="col dl"><a class="dlbtn" href="files/lutris_0.5.22_all.deb" download>Download</a></div>
+      </div>
+      <div class="row ">
+        <div class="col name"><span style="margin-right:6px">📝</span><a href="files/readme.txt" download>readme.txt</a></div>
+        <div class="col size">34 B</div>
+        <div class="col type">Text Document</div>
+        <div class="col mod">09/10/2026 12:56 AM</div>
+        <div class="col dl"><a class="dlbtn" href="files/readme.txt" download>Download</a></div>
+      </div>
+      <div class="row ">
+        <div class="col name"><span style="margin-right:6px">📦</span><a href="files/test.zip" download>test.zip</a></div>
+        <div class="col size">6.00 B</div>
+        <div class="col type">ZIP Archive</div>
+        <div class="col mod">09/10/2026 12:56 AM</div>
+        <div class="col dl"><a class="dlbtn" href="files/test.zip" download>Download</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <div class="cell">5 object(s) &nbsp; • 3.68 GB</div>
+    <div class="cell right">Apache 2.4.58 • PHP 8.3 • Port 8083 • <span id="clock"></span></div>
+  </div>
+</div>
+
+<div class="taskbar">
+  <div class="start"><div class="winlogo">⊞</div> Start</div>
+  <div class="taskitem active"><span>📁</span> Apache File Share</div>
+  <div class="taskitem"><span>🌐</span> Internet Explorer</div>
+  <div class="tray"><span>🔊</span><span>📶</span><span class="clock" id="tclock">12:00 PM</span></div>
+</div>
+
+<script>
+function upd(){const d=new Date();let h=d.getHours(),m=String(d.getMinutes()).padStart(2,'0'),ap=h>=12?'PM':'AM';h=h%12||12;document.getElementById('clock').textContent=d.toLocaleDateString()+' '+h+':'+m+' '+ap;document.getElementById('tclock').textContent=h+':'+m+' '+ap;}
+upd();setInterval(upd,60000);
+document.querySelectorAll('.row').forEach(r=>r.addEventListener('click',()=>{document.querySelectorAll('.row').forEach(x=>x.classList.remove('selected'));r.classList.add('selected')}));
+document.addEventListener('keydown',e=>{if(e.key==='F5')location.reload()});
+
+// — Draggable window —
+(function(){
+  const win = document.getElementById('win');
+  const title = document.getElementById('title');
+  let dragging=false, sx, sy, ox, oy;
+  // convert centered transform to absolute pixel pos on first drag
+  function toPixels(){
+    const cs = getComputedStyle(win);
+    if(cs.transform && cs.transform !== 'none'){
+      const rect = win.getBoundingClientRect();
+      win.style.left = rect.left+'px';
+      win.style.top = rect.top+'px';
+      win.style.transform='none';
+      win.style.right='auto';
+      win.style.bottom='auto';
+    } else if(win.style.left === '' || win.style.left.includes('%')){
+      const rect = win.getBoundingClientRect();
+      win.style.left = rect.left+'px';
+      win.style.top = rect.top+'px';
+      win.style.transform='none';
+    }
+  }
+  title.style.cursor='move';
+  title.addEventListener('mousedown', e=>{
+    if(e.target.closest('.tbtn')) return;
+    dragging=true; toPixels();
+    sx=e.clientX; sy=e.clientY;
+    const r=win.getBoundingClientRect();
+    ox=r.left; oy=r.top;
+    title.setPointerCapture&&title.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    let nx = ox + (e.clientX - sx);
+    let ny = oy + (e.clientY - sy);
+    // keep inside viewport with 10px margin
+    nx = Math.max(10, Math.min(nx, window.innerWidth - win.offsetWidth - 10));
+    ny = Math.max(10, Math.min(ny, window.innerHeight - 40));
+    win.style.left = nx+'px';
+    win.style.top = ny+'px';
+  });
+  window.addEventListener('mouseup', ()=>dragging=false);
+  // touch support
+  title.addEventListener('touchstart', e=>{
+    const t=e.touches[0]; dragging=true; toPixels();
+    sx=t.clientX; sy=t.clientY; const rt=win.getBoundingClientRect(); ox=rt.left; oy=rt.top;
+  },{passive:false});
+  window.addEventListener('touchmove', e=>{
+    if(!dragging) return; const t=e.touches[0];
+    let nx = ox + (t.clientX - sx); let ny = oy + (t.clientY - sy);
+    nx = Math.max(10, Math.min(nx, window.innerWidth - win.offsetWidth - 10));
+    ny = Math.max(10, Math.min(ny, window.innerHeight - 40));
+    win.style.left=nx+'px'; win.style.top=ny+'px'; e.preventDefault();
+  },{passive:false});
+  window.addEventListener('touchend', ()=>dragging=false);
+
+  // Window controls
+  const btns = document.querySelectorAll('.tbtn');
+  if(btns[0]) btns[0].onclick=()=>{ // minimize
+    win.style.display='none';
+    const ti=document.querySelector('.taskitem.active');
+    if(ti) ti.classList.remove('active');
+    win.dataset.min='1';
+  };
+  let prev={left:'',top:'',width:'',height:'',transform:''};
+  if(btns[1]) btns[1].onclick=()=>{ // maximize/restore
+    if(win.dataset.max==='1'){
+      win.style.left=prev.left; win.style.top=prev.top; win.style.width=prev.width; win.style.height=prev.height; win.style.transform=prev.transform||'translate(-50%,-50%)';
+      win.dataset.max='0';
+    } else {
+      const r=win.getBoundingClientRect();
+      prev={left:win.style.left, top:win.style.top, width:win.style.width, height:win.style.height, transform:win.style.transform || getComputedStyle(win).transform};
+      // ensure pixel position before maximize
+      toPixels();
+      win.style.left='0px'; win.style.top='0px'; win.style.width='100vw'; win.style.height='calc(100vh - 30px)'; win.style.transform='none';
+      win.dataset.max='1';
+    }
+  };
+  if(btns[2]) btns[2].onclick=()=>{ // close -> minimize same
+    win.style.display='none'; win.dataset.min='1';
+    const ti=document.querySelector('.taskitem.active'); if(ti) ti.classList.remove('active');
+  };
+  // restore via taskbar or desktop icon
+  document.querySelectorAll('.taskitem').forEach(t=>t.addEventListener('click',()=>{
+    if(win.style.display==='none'){ win.style.display='flex'; document.querySelectorAll('.taskitem').forEach(x=>x.classList.remove('active')); t.classList.add('active'); }
+  }));
+  document.querySelectorAll('.dicon').forEach(d=>d.addEventListener('dblclick',()=>{
+    const url=d.dataset.url;
+    if(url){ window.open(url,'_blank'); return; }
+    win.style.display='flex'; win.style.zIndex=2;
+    document.querySelectorAll('.taskitem').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.taskitem.active')?.classList.add('active');
+    if(!document.querySelector('.taskitem.active')) document.querySelector('.taskitem').classList.add('active');
+  }));
+  // single click also opens socials (Win2K style: single click selects, double opens) - add single-click selection + optional open on second click
+  document.querySelectorAll('.dicon[data-url]').forEach(d=>{
+    let clicks=0;
+    d.addEventListener('click',()=>{
+      document.querySelectorAll('.dicon').forEach(x=>x.classList.remove('selected'));
+      d.classList.add('selected');
+      clicks++;
+      setTimeout(()=>clicks=0,400);
+      if(clicks===2){ window.open(d.dataset.url,'_blank'); clicks=0; }
+    });
+  });
+  // bring to front on click
+  win.addEventListener('mousedown',()=>win.style.zIndex=5);
+
+  // Resize handle - bottom-right corner
+  const handle=document.createElement('div');
+  handle.style.cssText='position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,#808080 50%,#808080 55%,#c0c0c0 55%);border-left:1px solid #fff;border-top:1px solid #fff;';
+  win.style.position='absolute'; handle.id='rh'; win.appendChild(handle);
+  let resizing=false, rsx, rsy, rw, rh;
+  handle.addEventListener('mousedown', e=>{resizing=true; rsx=e.clientX; rsy=e.clientY; rw=win.offsetWidth; rh=win.offsetHeight; e.preventDefault(); e.stopPropagation();});
+  window.addEventListener('mousemove', e=>{
+    if(!resizing) return;
+    let nw = rw + (e.clientX - rsx); let nh = rh + (e.clientY - rsy);
+    nw=Math.max(400, Math.min(nw, window.innerWidth-20)); nh=Math.max(200, Math.min(nh, window.innerHeight-40));
+    win.style.width=nw+'px'; win.style.height=nh+'px'; win.style.transform='none';
+  });
+  window.addEventListener('mouseup', ()=>resizing=false);
+
+  // Desktop icons draggable
+  document.querySelectorAll('.dicon').forEach(icon=>{
+    let dDrag=false, dix, diy, iox, ioy;
+    icon.style.position='absolute';
+    // initial positions already via flex, convert to absolute
+    icon.addEventListener('mousedown', e=>{
+      dDrag=true; icon.style.zIndex=10;
+      const r=icon.getBoundingClientRect(); iox=r.left; ioy=r.top; dix=e.clientX; diy=e.clientY;
+      icon.style.left=iox+'px'; icon.style.top=ioy+'px'; icon.style.right='auto'; e.preventDefault();
+    });
+    window.addEventListener('mousemove', e=>{
+      if(!dDrag) return;
+      let nx=iox+(e.clientX-dix), ny=ioy+(e.clientY-diy);
+      nx=Math.max(0,Math.min(nx,window.innerWidth-80)); ny=Math.max(0,Math.min(ny,window.innerHeight-40));
+      icon.style.left=nx+'px'; icon.style.top=ny+'px';
+    });
+    window.addEventListener('mouseup', ()=>{dDrag=false; icon.style.zIndex=1;});
+  });
+  // set initial absolute positions for icons
+  const dicons=document.querySelectorAll('.dicon');
+  let top0=12; dicons.forEach(ic=>{ic.style.left='12px'; ic.style.top=top0+'px'; top0+=72;});
+})();
+
+</script>
+
+<script>
+// Matrix rain - hacked desktop
+(function(){
+  const canvas = document.getElementById('matrix');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  const fontSize = 13;
+  const cols = () => Math.floor(canvas.width / fontSize);
+  let drops = [];
+  function initDrops(){ drops = Array(cols()).fill(0).map(()=> Math.floor(Math.random()*-40)); }
+  initDrops(); window.addEventListener('resize', initDrops);
+  const chars = "01ilyas.sbihanILY4S.SBIH4NDEDSEC01|/\_.-█▓▒░<>";
+  const skulls = ["☠","💀","◉","▿","--"];
+  let frame=0;
+  function draw(){
+    frame++;
+    // fade
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.font = fontSize+"px 'Courier New', monospace";
+    for(let i=0;i<drops.length;i++){
+      const x = i*fontSize;
+      const y = drops[i]*fontSize;
+      // head is brighter
+      const isHead = true;
+      // occasionally draw skull in stream
+      let ch;
+      if(Math.random()<0.008) ch = skulls[Math.floor(Math.random()*skulls.length)];
+      else if(Math.random()<0.015) ch = "ilyas.sbihan"[Math.floor(Math.random()*11)];
+      else ch = chars[Math.floor(Math.random()*chars.length)];
+      // color: most green, occasional red glitch, occasional white head
+      let color = "#00ff41";
+      if(Math.random()<0.018) color = "#ff0040";
+      else if(Math.random()<0.03) color = "#ffffff";
+      else if(drops[i] < 3) color = "#b6ffcc";
+      ctx.fillStyle = color;
+      // glow for head
+      if(drops[i] % 7 === 0){
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 6;
+      } else ctx.shadowBlur = 0;
+      ctx.fillText(ch, x, y);
+      // move drop
+      if(y > canvas.height && Math.random() > 0.975) drops[i]=0;
+      else drops[i]++;
+      // occasional horizontal glitch slice
+      if(frame % 90 === 0 && Math.random()<0.12){
+        ctx.fillStyle="rgba(0,255,65,0.04)";
+        ctx.fillRect(0, y, canvas.width, 1.5);
+      }
+    }
+    // subtle vignette
+    ctx.fillStyle="radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%)";
+    // keep loop
+    requestAnimationFrame(draw);
+  }
+  draw();
+  // extra skulls floating
+  const splash = document.querySelector('.hacked-splash .skull');
+  if(splash){
+    setInterval(()=>{
+      splash.style.transform = Math.random()<0.5 ? "translate(-0.7px,0) skewX(0.4deg)" : "translate(0.7px,0) skewX(-0.4deg)";
+      setTimeout(()=> splash.style.transform="translate(0,0)", 90);
+    }, 2200);
+  }
+})();
+</script>
+</body>
+</html>
