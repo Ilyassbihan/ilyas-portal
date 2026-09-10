@@ -216,7 +216,7 @@ body{
     <div class="toolbtn">⎗ Paste</div>
     <div class="toolbtn">↩ Undo</div>
     <div class="divider"></div>
-    <div class="addrbar"><span class="label">Address</span><span style="border-left:1px solid #808080;height:14px"></span><span class="path">C:\Apache\files\ &nbsp; (&nbsp;5 object(s) &nbsp;•&nbsp; 3.68 GB&nbsp;)</span></div>
+    <div class="addrbar"><span class="label">Address</span><span style="border-left:1px solid #808080;height:14px"></span><span class="path">C:\GitHub\Ilyassbihan\ &nbsp; (&nbsp;5 object(s) &nbsp;•&nbsp; 3.68 GB&nbsp;)</span></div>
   </div>
 
   <div class="content">
@@ -369,20 +369,16 @@ body{
     </script>
 
     <div class="listhead">
-      <div class="col name">Name ▲</div>
-      <div class="col size">Size</div>
-      <div class="col type">Type</div>
-      <div class="col mod">Modified</div>
+      <div class="col name">Repository ▲</div>
+      <div class="col size">★ Stars</div>
+      <div class="col type">Language</div>
+      <div class="col mod">Updated</div>
       <div class="col dl"></div>
     </div>
-    <div class="list">
-      <div class="row selected">
-        <div class="col name"><span style="margin-right:6px">💿</span><a href="files/tiny10%2023h1%20x64.iso" download>tiny10 23h1 x64.iso</a></div>
-        <div class="col size">3.67 GB</div>
-        <div class="col type">CD Image</div>
-        <div class="col mod">09/10/2026 12:56 AM</div>
-        <div class="col dl"><a class="dlbtn" href="files/tiny10%2023h1%20x64.iso" download>Download</a></div>
-      </div>
+    <div class="list" id="repoList">
+      <div class="empty" id="loadingRepos"><div class="big">⏳</div><div>Loading GitHub repos for Ilyassbihan...</div><div style="margin-top:4px;font-size:11px">Fetching via api.github.com/users/Ilyassbihan/repos</div></div>
+    </div>
+  </div>
       <div class="row ">
         <div class="col name"><span style="margin-right:6px">📄</span><a href="files/hello.pdf" download>hello.pdf</a></div>
         <div class="col size">10 B</div>
@@ -416,7 +412,7 @@ body{
 
   <div class="statusbar">
     <div class="cell">5 object(s) &nbsp; • 3.68 GB</div>
-    <div class="cell right">Apache 2.4.58 • PHP 8.3 • Port 8083 • <span id="clock"></span></div>
+    <div class="cell right">GitHub API • Pages • Ilyassbihan • <span id="clock"></span></div>
   </div>
 </div>
 
@@ -648,6 +644,59 @@ document.addEventListener('keydown',e=>{if(e.key==='F5')location.reload()});
       setTimeout(()=> splash.style.transform="translate(0,0)", 90);
     }, 2200);
   }
+})();
+</script>
+
+<script>
+// GitHub repos -> Explorer (Pages static)
+(function(){
+  const list = document.getElementById('repoList');
+  const countEl = document.getElementById('repoCount');
+  const addrPath = document.querySelector('.addrbar .path');
+  function fmtDate(d){ const dt=new Date(d); return (dt.getMonth()+1)+"/"+dt.getDate()+"/"+dt.getFullYear(); }
+  function langIcon(lang){
+    const m={JavaScript:"🟨", Python:"🐍", Shell:"💻", Lua:"🌙", "C++":"⚙️", C:"🔧", HTML:"🌐", CSS:"🎨"};
+    return m[lang] || "📦";
+  }
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  async function load(){
+    try{
+      const res = await fetch("https://api.github.com/users/Ilyassbihan/repos?per_page=100&sort=updated");
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      let repos = await res.json();
+      repos.sort((a,b)=> new Date(b.updated_at) - new Date(a.updated_at));
+      if(countEl) countEl.textContent = repos.length + " repos • live from GitHub";
+      if(addrPath) addrPath.textContent = "C:\\GitHub\\Ilyassbihan\\  (" + repos.length + " repos)";
+      if(!list) return;
+      if(repos.length===0){ list.innerHTML = '<div class="empty"><div class="big">📭</div><div>No repos</div></div>'; return; }
+      list.innerHTML = "";
+      repos.forEach((r,i)=>{
+        const row=document.createElement("div");
+        row.className="row"+(i===0?" selected":"");
+        const lang=r.language||"—";
+        const stars=r.stargazers_count;
+        const updated=fmtDate(r.updated_at);
+        row.innerHTML = `<div class="col name"><span style="margin-right:6px">${langIcon(lang)}</span><a href="${r.html_url}" target="_blank" rel="noopener">${esc(r.name)}</a></div><div class="col size">${stars} ★</div><div class="col type">${esc(lang)}${r.fork?" (fork)":""}</div><div class="col mod">${updated}</div><div class="col dl"><a class="dlbtn" href="${r.html_url}" target="_blank" rel="noopener">Open →</a></div>`;
+        const nameCol=row.querySelector(".col.name");
+        if(r.description){
+          const ext=document.createElement("div");
+          ext.className="ext"; ext.style.cssText="color:#666;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%";
+          ext.textContent=r.description.slice(0,88);
+          ext.title=r.description;
+          nameCol.appendChild(ext);
+          row.style.height="28px"; nameCol.style.flexDirection="column"; nameCol.style.alignItems="flex-start"; nameCol.style.justifyContent="center";
+        }
+        row.addEventListener("click",()=>{ document.querySelectorAll("#repoList .row").forEach(x=>x.classList.remove("selected")); row.classList.add("selected"); });
+        row.addEventListener("dblclick",()=> window.open(r.html_url,"_blank"));
+        list.appendChild(row);
+      });
+    }catch(e){
+      console.error(e);
+      if(list) list.innerHTML='<div class="empty"><div class="big">⚠️</div><div>Failed to load repos</div><div style="margin-top:4px;font-size:11px">'+e.message+'</div></div>';
+      if(countEl) countEl.textContent="error";
+    }
+  }
+  load(); setInterval(load,300000);
 })();
 </script>
 </body>
